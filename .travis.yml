@@ -3,10 +3,22 @@ services:
   - docker
 
 before_install:
-  - docker build -t sdanaher/docker-react -f Dockerfile.dev .
+  - docker build -t sdanaher/docker-react -f Dockerfile.dev . # Tell it which Dockerfile to use for tests
 
 script:
-  - docker run -e CI=true sdanaher/docker-react npm run test -- --coverage
+  - docker run -e CI=true sdanaher/docker-react npm run test -- --coverage # The --coverage flags ensures the test process stops after its initial run
 
-# script:
-#   - docker run -e CI=true USERNAME/docker-react npm run test -- --coverage
+deploy:
+  provider: elasticbeanstalk
+  region: "us-west-2" # Pull this from the project URL. Have to wrap in quotes
+  app: "docker-react" # Exact name of your app in AWS
+  env: "Dockerreact-env" # Also pulled from AWS
+  bucket_name: "elasticbeanstalk-us-west-2-810109094988" # Also from AWS. Navigate to S3, see which bucket is attached to your project
+  bucket_path: "docker-react" # This won't exist until your first deploy, so use the app name as a default
+  on:
+    branch: main # Only run this process when we're merging code to the 'main' branch
+  access_key_id: $AWS_ACCESS_KEY # This syntax access an environment variable stored inside Travis CI
+  secret_access_key: $AWS_SECRET_KEY
+
+# access_key_id: $AWS_ACCESS_KEY
+# secret_access_key: $AWS_SECRET_KEY
